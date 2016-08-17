@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -14,6 +15,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+// GetBodyFromS3Key gets the s3 object with the provided
+// s3 key.
+func GetBodyFromS3Key(key string) ([]byte, error) {
+	// Fetch item from s3 usig the extracted key
+	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+
+	params := &s3.GetObjectInput{
+		Bucket: aws.String("stats-lambda-v2"),
+		Key:    aws.String(key),
+	}
+
+	obj, err := svc.GetObject(params)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(obj.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
 
 // S3Upload uploads the given list of User to S3 with
 // a given bucket, key
@@ -64,9 +89,9 @@ func Base64Compress(data interface{}) (string, error) {
 	return base64.StdEncoding.EncodeToString(b.Bytes()), nil
 }
 
-// Base64Decompress decompresses base64 encoded and zlib compressed
+// DecompressBas64 decompresses base64 encoded and zlib compressed
 // data.
-func Base64Decompress(data []byte) (io.ReadCloser, error) {
+func DecompressBas64(data []byte) (io.ReadCloser, error) {
 	d, err := base64.StdEncoding.DecodeString(string(data))
 	if err != nil {
 		return nil, err
