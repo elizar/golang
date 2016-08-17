@@ -42,7 +42,7 @@ func GetBodyFromS3Key(key string) ([]byte, error) {
 
 // S3Upload uploads the given list of User to S3 with
 // a given bucket, key
-func S3Upload(item interface{}, bucket string, key string, done chan bool) {
+func S3Upload(item interface{}, bucket string, key string) error {
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
 	// Before uploading to S3, we need to compress the item
@@ -50,8 +50,7 @@ func S3Upload(item interface{}, bucket string, key string, done chan bool) {
 	data, err := Base64Compress(item)
 	if err != nil {
 		LogIt(fmt.Sprintf("Cannot compress due to error: %s", err.Error()))
-		done <- false
-		return
+		return err
 	}
 
 	params := &s3.PutObjectInput{
@@ -65,11 +64,10 @@ func S3Upload(item interface{}, bucket string, key string, done chan bool) {
 	_, err = svc.PutObject(params)
 	if err != nil {
 		LogIt(fmt.Sprintf("Failed to upload item to S3: %s", err.Error()))
-		done <- false
-		return
+		return err
 	}
 
-	done <- true
+	return nil
 }
 
 // Base64Compress compresses the given data and returns a
