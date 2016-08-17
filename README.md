@@ -1,4 +1,9 @@
-# A-FIS GO UTILITY LIB
+# A-FIS GO PACKAGES
 
-This is a collection of utility code for working with
-GO.
+&nbsp;
+
+- utility - A collection of helpful utility code
+
+&nbsp;
+
+> more soon...
