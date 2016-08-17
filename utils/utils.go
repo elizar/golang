@@ -107,7 +107,10 @@ func DecompressBas64(data []byte) (io.ReadCloser, error) {
 	return r, nil
 }
 
-// LogIt ...
+// LogIt logs the given message string to Stderr instead of
+// Stdout. Because when you run your GO code in lambda using
+// node.js shim, the Stdout is used by node.js to communicate
+// with your GO program.
 func LogIt(message string) {
 	logMessage := fmt.Sprintf("%s - %s", time.Now().Format(time.RFC3339), message)
 	fmt.Fprintln(os.Stderr, logMessage)

@@ -5,6 +5,6 @@ language.
 
 &nbsp;
 
-- **utility** - A collection of helpful utility code
+- **[utils](https://godoc.org/github.com/a-fis/golang/utils)** - A collection of helpful utility code
 
 &nbsp;
