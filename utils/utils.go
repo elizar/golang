@@ -19,13 +19,13 @@ import (
 
 // S3GetFromEvent gets the s3 object with the provided
 // event ( json.RawMessage ) and bucket name.
-func S3GetFromEvent(event json.RawMessage, bucket string) ([]byte, error) {
+func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
 	var evt as3.Event
-	err := json.Unmarshal(event, &evt)
+	err = json.Unmarshal(event, &evt)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key := evt.Records[0].S3.Object.Key
@@ -37,15 +37,26 @@ func S3GetFromEvent(event json.RawMessage, bucket string) ([]byte, error) {
 
 	obj, err := svc.GetObject(params)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	body, err := ioutil.ReadAll(obj.Body)
+	body, err = ioutil.ReadAll(obj.Body)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return body, nil
+	if decompress {
+		var b io.ReadCloser
+
+		b, err = DecompressBas64(body)
+		if err != nil {
+			return
+		}
+
+		body, err = ioutil.ReadAll(b)
+	}
+
+	return
 }
 
 // S3Upload uploads the given list of User to S3 with
