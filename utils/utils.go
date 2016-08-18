@@ -17,9 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// S3GetFromKey gets the s3 object from the given key
-// and bucket name
-func S3GetFromKey(key string, bucket string) (io.ReadCloser, error) {
+// S3GetFromKey gets the s3 object from the given key,
+// bucket name and an optional decompress param.
+func S3GetFromKey(key string, bucket string, decompress bool) ([]byte, error) {
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
 	params := &s3.GetObjectInput{
@@ -27,16 +27,32 @@ func S3GetFromKey(key string, bucket string) (io.ReadCloser, error) {
 		Key:    aws.String(key),
 	}
 
-	obj, err := svc.GetObject(params)
+	item, err := svc.GetObject(params)
 	if err != nil {
 		return nil, err
 	}
 
-	return obj.Body, nil
+	body, err := ioutil.ReadAll(item.Body)
+
+	if decompress {
+		rc, err := DecompressBas64(body)
+		if err != nil {
+			return nil, err
+		}
+
+		ba, err := ioutil.ReadAll(rc)
+		if err != nil {
+			return nil, err
+		}
+
+		return ba, nil
+	}
+
+	return body, nil
 }
 
 // S3GetFromEvent gets the s3 object with the provided
-// event ( json.RawMessage ) and bucket name.
+// event ( json.RawMessage ), bucket name and an optional decompress param.
 func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
 	var evt as3.Event
 
@@ -46,27 +62,7 @@ func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body
 	}
 
 	key := evt.Records[0].S3.Object.Key
-
-	rc, err := S3GetFromKey(key, bucket)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err = ioutil.ReadAll(rc)
-	if err != nil {
-		return
-	}
-
-	if decompress {
-		var b io.ReadCloser
-
-		b, err = DecompressBas64(body)
-		if err != nil {
-			return
-		}
-
-		body, err = ioutil.ReadAll(b)
-	}
+	body, err = S3GetFromKey(key, bucket, decompress)
 
 	return
 }
