@@ -11,19 +11,27 @@ import (
 	"os"
 	"time"
 
+	as3 "github.com/apex/go-apex/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// GetBodyFromS3Key gets the s3 object with the provided
-// s3 key.
-func GetBodyFromS3Key(key string) ([]byte, error) {
-	// Fetch item from s3 usig the extracted key
+// S3GetFromEvent gets the s3 object with the provided
+// event ( json.RawMessage ) and bucket name.
+func S3GetFromEvent(event json.RawMessage, bucket string) ([]byte, error) {
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
+	var evt as3.Event
+	err := json.Unmarshal(event, &evt)
+	if err != nil {
+		return nil, err
+	}
+
+	key := evt.Records[0].S3.Object.Key
+
 	params := &s3.GetObjectInput{
-		Bucket: aws.String("stats-lambda-v2"),
+		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
 
