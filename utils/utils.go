@@ -17,18 +17,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-// S3GetFromEvent gets the s3 object with the provided
-// event ( json.RawMessage ) and bucket name.
-func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
+// S3GetFromKey gets the s3 object from the given key
+// and bucket name
+func S3GetFromKey(key string, bucket string) (io.ReadCloser, error) {
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
-
-	var evt as3.Event
-	err = json.Unmarshal(event, &evt)
-	if err != nil {
-		return
-	}
-
-	key := evt.Records[0].S3.Object.Key
 
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
@@ -37,10 +29,30 @@ func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body
 
 	obj, err := svc.GetObject(params)
 	if err != nil {
+		return nil, err
+	}
+
+	return obj.Body, nil
+}
+
+// S3GetFromEvent gets the s3 object with the provided
+// event ( json.RawMessage ) and bucket name.
+func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
+	var evt as3.Event
+
+	err = json.Unmarshal(event, &evt)
+	if err != nil {
 		return
 	}
 
-	body, err = ioutil.ReadAll(obj.Body)
+	key := evt.Records[0].S3.Object.Key
+
+	rc, err := S3GetFromKey(key, bucket)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err = ioutil.ReadAll(rc)
 	if err != nil {
 		return
 	}
