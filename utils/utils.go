@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"time"
 
@@ -168,4 +169,18 @@ func GetOffset(st time.Time, hour int) (offset int) {
 func GetBOD(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
+// Round a simple floating point round
+func Round(f float64) float64 {
+	if f < 0 {
+		return math.Ceil(f - 0.5)
+	}
+	return math.Floor(f + 0.5)
+}
+
+// RoundPlus round with a specific precision
+func RoundPlus(f float64, places int) float64 {
+	shift := math.Pow(10, float64(places))
+	return Round(f*shift) / shift
 }
