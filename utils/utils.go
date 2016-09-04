@@ -222,7 +222,7 @@ func SortMapByValue(m map[string]int, limit int, reverse bool) PairList {
 		sort.Sort(p)
 	}
 
-	if limit > 0 {
+	if limit > 0 && limit < len(m) {
 		return p[:limit]
 	}
 	return p
