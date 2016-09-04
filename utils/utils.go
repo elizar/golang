@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"sort"
 	"time"
 
 	as3 "github.com/apex/go-apex/s3"
@@ -110,8 +111,14 @@ func Base64Compress(data interface{}) (string, error) {
 
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(d)
-	w.Close()
+	_, err = w.Write(d)
+	if err != nil {
+		return "", err
+	}
+	err = w.Close()
+	if err != nil {
+		return "", err
+	}
 
 	return base64.StdEncoding.EncodeToString(b.Bytes()), nil
 }
@@ -130,7 +137,9 @@ func DecompressBas64(data []byte) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() {
+		_ = r.Close()
+	}()
 
 	return r, nil
 }
@@ -183,4 +192,38 @@ func Round(f float64) float64 {
 func RoundPlus(f float64, places int) float64 {
 	shift := math.Pow(10, float64(places))
 	return Round(f*shift) / shift
+}
+
+// Pair a data structure to hold a key/value Pair.
+type Pair struct {
+	Key   string
+	Value int
+}
+
+// PairList Pair list
+type PairList []Pair
+
+func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p PairList) Len() int           { return len(p) }
+func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
+
+// SortMapByValue sorts a givem map with string as key and int as value
+func SortMapByValue(m map[string]int, limit int, reverse bool) PairList {
+	p := make(PairList, len(m))
+	i := 0
+	for k, v := range m {
+		p[i] = Pair{k, v}
+		i++
+	}
+
+	if reverse {
+		sort.Sort(sort.Reverse(p))
+	} else {
+		sort.Sort(p)
+	}
+
+	if limit > 0 {
+		return p[:limit]
+	}
+	return p
 }
