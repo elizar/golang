@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"compress/gzip"
 	"compress/zlib"
 	"encoding/base64"
 	"encoding/json"
@@ -131,17 +132,26 @@ func DecompressBas64(data []byte) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	b := bytes.NewReader(d)
+	body, err := Decompress(d, "")
+	return body, err
+}
 
-	r, err := zlib.NewReader(b)
-	if err != nil {
-		return nil, err
+// Decompress decompresses data from the given compression.
+// which defaults to zlib.
+func Decompress(data []byte, compression string) (io.ReadCloser, error) {
+	b := bytes.NewReader(data)
+	var r io.ReadCloser
+	var err error
+
+	switch compression {
+	case "gzip":
+		r, err = gzip.NewReader(b)
+	default:
+		r, err = zlib.NewReader(b)
 	}
-	defer func() {
-		_ = r.Close()
-	}()
+	_ = r.Close()
 
-	return r, nil
+	return r, err
 }
 
 // LogIt logs the given message string to Stderr instead of
