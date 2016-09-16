@@ -73,31 +73,43 @@ func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body
 // S3Upload uploads the given list of User to S3 with
 // a given bucket, key
 func S3Upload(item interface{}, bucket string, key string, compress bool) (err error) {
-	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
-
 	var data string
+	ctype := "text/plain"
 
 	if compress {
 		data, err = Base64Compress(item)
+		if err != nil {
+			return
+		}
 	} else {
 		var b []byte
+
 		b, err = json.Marshal(item)
+		if err != nil {
+			return
+		}
+
 		data = string(b)
+		ctype = "application/json"
 	}
+
+	err = S3UploadWithType([]byte(data), bucket, key, ctype)
+	return
+}
+
+// S3UploadWithType uploads data to s3 with a given bucket, key and content-type
+func S3UploadWithType(data []byte, bucket string, key string, ctype string) (err error) {
+	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
 	params := &s3.PutObjectInput{
 		Bucket:      aws.String(bucket),                    // Required
 		Key:         aws.String(key),                       // Required
 		Expires:     aws.Time(time.Now().AddDate(0, 0, 1)), // 1 day from now
-		Body:        bytes.NewReader([]byte(data)),
-		ContentType: aws.String("text/plain"),
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String(ctype),
 	}
 
 	_, err = svc.PutObject(params)
-	if err != nil {
-		LogIt(fmt.Sprintf("Failed to upload item to S3: %s", err.Error()))
-	}
-
 	return
 }
 
