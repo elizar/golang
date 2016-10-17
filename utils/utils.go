@@ -184,7 +184,7 @@ func GetOffset(st time.Time, hour int) (offset int) {
 	// UTC Hour
 	UTCHour := st.Hour() + so
 
-	offsets := []int{-11, -10, -9, 8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
+	offsets := []int{-11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
 
 	for _, v := range offsets {
 		if (UTCHour+v)%24 == hour {
