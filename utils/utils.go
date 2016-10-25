@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -248,4 +249,29 @@ func SortMapByValue(m map[string]int, limit int, reverse bool) PairList {
 		return p[:limit]
 	}
 	return p
+}
+
+// Transact handles db transaction with proper rollback
+// and commit execution
+func Transact(db *sql.DB, txFunc func(*sql.Tx) error) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			switch p := p.(type) {
+			case error:
+				err = p
+			default:
+				err = fmt.Errorf("%s", p)
+			}
+		}
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
+	return txFunc(tx)
 }
