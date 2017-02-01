@@ -58,6 +58,22 @@ func S3GetFromKey(key string, bucket string, decompress bool) ([]byte, error) {
 // S3GetFromEvent gets the s3 object with the provided
 // event ( json.RawMessage ), bucket name and an optional decompress param.
 func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
+	body, _, err = S3GetFromEventWithKey(event, bucket, decompress)
+	return
+}
+
+func S3GetFromEventWithKey(event json.RawMessage, bucket string, decompress bool) (body []byte, key string, err error) {
+	key, err = S3GetKeyFromEvent(event)
+	if err != nil {
+		return
+	}
+
+	body, err = S3GetFromKey(key, bucket, decompress)
+	return
+}
+
+// S3GetKeyFromEvent gets the key from the gevent event json payload
+func S3GetKeyFromEvent(event json.RawMessage) (key string, err error) {
 	var evt as3.Event
 
 	err = json.Unmarshal(event, &evt)
@@ -65,9 +81,7 @@ func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body
 		return
 	}
 
-	key := evt.Records[0].S3.Object.Key
-	body, err = S3GetFromKey(key, bucket, decompress)
-
+	key = evt.Records[0].S3.Object.Key
 	return
 }
 
