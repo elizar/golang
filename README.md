@@ -1,4 +1,4 @@
-# A-FIS Go Packages
+# Golang utility lib
 
 A collection of helpful packages for working with the GO programming
 language.
