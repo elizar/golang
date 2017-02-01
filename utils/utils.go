@@ -62,6 +62,7 @@ func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body
 	return
 }
 
+// S3GetFromEventWithKey gets the s3 data from the event including the key
 func S3GetFromEventWithKey(event json.RawMessage, bucket string, decompress bool) (body []byte, key string, err error) {
 	key, err = S3GetKeyFromEvent(event)
 	if err != nil {
@@ -282,7 +283,7 @@ func Transact(db *sql.DB, txFunc func(*sql.Tx) error) (err error) {
 			}
 		}
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return
 		}
 		err = tx.Commit()
