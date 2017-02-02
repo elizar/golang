@@ -24,7 +24,7 @@ import (
 // S3GetFromKey gets the s3 object from the given key,
 // bucket name and an optional decompress param.
 func S3GetFromKey(key string, bucket string, decompress bool) ([]byte, error) {
-	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	svc := s3.New(session.New(), &aws.Config{})
 
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
