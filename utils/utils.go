@@ -115,7 +115,7 @@ func S3Upload(item interface{}, bucket string, key string, compress bool) (err e
 
 // S3UploadWithType uploads data to s3 with a given bucket, key and content-type
 func S3UploadWithType(data []byte, bucket string, key string, ctype string) (err error) {
-	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	svc := s3.New(session.New(), &aws.Config{})
 
 	params := &s3.PutObjectInput{
 		Bucket:      aws.String(bucket),                    // Required
