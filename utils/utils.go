@@ -273,6 +273,7 @@ func Transact(db *sql.DB, txFunc func(*sql.Tx) error) (err error) {
 	if err != nil {
 		return
 	}
+
 	defer func() {
 		if p := recover(); p != nil {
 			switch p := p.(type) {
@@ -282,11 +283,14 @@ func Transact(db *sql.DB, txFunc func(*sql.Tx) error) (err error) {
 				err = fmt.Errorf("%s", p)
 			}
 		}
+
 		if err != nil {
 			_ = tx.Rollback()
 			return
 		}
+
 		err = tx.Commit()
 	}()
+
 	return txFunc(tx)
 }
