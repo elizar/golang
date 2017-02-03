@@ -16,10 +16,32 @@ import (
 	"time"
 
 	as3 "github.com/apex/go-apex/s3"
+	asns "github.com/apex/go-apex/sns"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+// SNSGetMessageFromEvent parses the event payload and returns the message
+func SNSGetMessageFromEvent(event json.RawMessage) (string, error) {
+	evt, err := SNSGetFromEvent(event)
+	if err != nil {
+		return "", err
+	}
+
+	return evt.Records[0].SNS.Message, nil
+}
+
+// SNSGetFromEvent parses the event payload and returns the Event object
+func SNSGetFromEvent(event json.RawMessage) (*asns.Event, error) {
+	var snsEvt asns.Event
+	err := json.Unmarshal(event, &snsEvt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &snsEvt, nil
+}
 
 // S3GetFromKey gets the s3 object from the given key,
 // bucket name and an optional decompress param.
@@ -57,13 +79,21 @@ func S3GetFromKey(key string, bucket string, decompress bool) ([]byte, error) {
 
 // S3GetFromEvent gets the s3 object with the provided
 // event ( json.RawMessage ), bucket name and an optional decompress param.
-func S3GetFromEvent(event json.RawMessage, bucket string, decompress bool) (body []byte, err error) {
+func S3GetFromEvent(
+	event json.RawMessage,
+	bucket string,
+	decompress bool,
+) (body []byte, err error) {
 	body, _, err = S3GetFromEventWithKey(event, bucket, decompress)
 	return
 }
 
 // S3GetFromEventWithKey gets the s3 data from the event including the key
-func S3GetFromEventWithKey(event json.RawMessage, bucket string, decompress bool) (body []byte, key string, err error) {
+func S3GetFromEventWithKey(
+	event json.RawMessage,
+	bucket string,
+	decompress bool,
+) (body []byte, key string, err error) {
 	key, err = S3GetKeyFromEvent(event)
 	if err != nil {
 		return
@@ -88,7 +118,12 @@ func S3GetKeyFromEvent(event json.RawMessage) (key string, err error) {
 
 // S3Upload uploads the given list of User to S3 with
 // a given bucket, key
-func S3Upload(item interface{}, bucket string, key string, compress bool) (err error) {
+func S3Upload(
+	item interface{},
+	bucket string,
+	key string,
+	compress bool,
+) (err error) {
 	var data string
 	ctype := "text/plain"
 
