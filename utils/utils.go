@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -27,6 +28,10 @@ func SNSGetMessageFromEvent(event json.RawMessage) (string, error) {
 	evt, err := SNSGetFromEvent(event)
 	if err != nil {
 		return "", err
+	}
+
+	if evt.Records == nil {
+		return "", errors.New("Invalid SNS Event")
 	}
 
 	return evt.Records[0].SNS.Message, nil
