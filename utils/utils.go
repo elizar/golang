@@ -169,6 +169,27 @@ func S3UploadWithType(data []byte, bucket string, key string, ctype string) (err
 	return
 }
 
+// S3UploadWithType uploads data to s3 with a given bucket, key and content-type
+func S3UploadWithTypePublic(
+	data []byte,
+	bucket string,
+	key string,
+	ctype string) (err error) {
+	svc := s3.New(session.New(), &aws.Config{})
+
+	params := &s3.PutObjectInput{
+		ACL:         aws.String("public-read"),             // Required
+		Bucket:      aws.String(bucket),                    // Required
+		Key:         aws.String(key),                       // Required
+		Expires:     aws.Time(time.Now().AddDate(0, 0, 1)), // 1 day from now
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String(ctype),
+	}
+
+	_, err = svc.PutObject(params)
+	return
+}
+
 // Base64Compress compresses the given data and returns a
 // base64 string representation of the compressed data.
 func Base64Compress(data interface{}) (string, error) {
