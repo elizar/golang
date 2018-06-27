@@ -169,7 +169,7 @@ func S3UploadWithType(data []byte, bucket string, key string, ctype string) (err
 	return
 }
 
-// S3UploadWithType uploads data to s3 with a given bucket, key and content-type
+// S3UploadWithTypePublic uploads data to s3 with a given bucket, key and content-type
 func S3UploadWithTypePublic(
 	data []byte,
 	bucket string,
